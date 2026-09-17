@@ -72,6 +72,8 @@ def get_db_connection():
 def admin_required(view):
     @wraps(view)
     def wrapped_view(*args, **kwargs):
+        if os.getenv("ADMIN_ENABLED", "true").strip().lower() not in {"1", "true", "yes", "on"}:
+            return jsonify({"error": "Not found"}), 404
         username = os.getenv("ADMIN_USERNAME", "").strip()
         password = os.getenv("ADMIN_PASSWORD", "")
         credentials = request.authorization
