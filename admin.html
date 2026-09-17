@@ -17,6 +17,7 @@
     h1 { margin:8px 0 0; font-size:clamp(28px, 5vw, 48px); letter-spacing:-.03em; }
     .status { color:var(--muted); font-size:14px; text-align:right; }
     .status strong { color:var(--accent); display:block; margin-bottom:4px; }
+    .latest-address { color:var(--text); display:block; font-size:13px; line-height:1.4; margin-top:5px; max-width:360px; }
     .grid { display:grid; grid-template-columns:minmax(0, 1.35fr) minmax(320px, .65fr); gap:16px; }
     .panel { background:rgba(24,33,32,.9); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
     .panel-head { display:flex; justify-content:space-between; align-items:center; padding:16px 18px; border-bottom:1px solid var(--line); }
@@ -39,7 +40,7 @@
   <main class="shell">
     <header>
       <div><div class="eyebrow">Private dashboard</div><h1>Konum akışı</h1></div>
-      <div class="status"><strong id="connection">Bağlanıyor...</strong><span id="updated">Henüz yenilenmedi</span></div>
+      <div class="status"><strong id="connection">Bağlanıyor...</strong><span id="latestAddress" class="latest-address">Adres yükleniyor...</span><span id="updated">Henüz yenilenmedi</span></div>
     </header>
     <section class="grid">
       <article class="panel"><div class="panel-head"><h2>Son bilinen konumlar</h2><button id="refresh" type="button">Yenile</button></div><div id="map"></div></article>
@@ -53,10 +54,18 @@
     let markers = L.layerGroup().addTo(map);
     const rows = document.getElementById("rows");
     const connection = document.getElementById("connection");
+    const latestAddress = document.getElementById("latestAddress");
     const updated = document.getElementById("updated");
     const count = document.getElementById("count");
     const button = document.getElementById("refresh");
     const formatDate = value => value ? new Date(value).toLocaleString("tr-TR") : "-";
+    async function reverseGeocode(record) {
+      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${record.lat}&lon=${record.lon}&accept-language=tr`;
+      const response = await fetch(url, { headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error("Adres alınamadı");
+      const data = await response.json();
+      return data.display_name || "Adres bulunamadı";
+    }
     async function refresh() {
       button.disabled = true;
       try {
@@ -71,15 +80,25 @@
           connection.textContent = "Bağlı";
         } else {
           const bounds = [];
+          let latestMarker;
           records.forEach(record => {
             const point = [record.lat, record.lon];
             bounds.push(point);
-            L.marker(point).bindPopup(`<b>${formatDate(record.timestamp)}</b><br>${record.lat.toFixed(6)}, ${record.lon.toFixed(6)}`).addTo(markers);
+            const marker = L.marker(point).bindPopup(`<b>${formatDate(record.timestamp)}</b><br>${record.lat.toFixed(6)}, ${record.lon.toFixed(6)}`).addTo(markers);
+            if (!latestMarker) latestMarker = marker;
             const row = document.createElement("tr");
             row.innerHTML = `<td>${formatDate(record.timestamp)}</td><td class="mono">${record.lat.toFixed(6)}, ${record.lon.toFixed(6)}</td><td>${record.accuracy == null ? "-" : `±${Math.round(record.accuracy)} m`}</td>`;
             rows.appendChild(row);
           });
           map.fitBounds(bounds, { padding: [24, 24], maxZoom: 16 });
+          latestAddress.textContent = "Adres alınıyor...";
+          try {
+            const address = await reverseGeocode(records[0]);
+            latestAddress.textContent = address;
+            latestMarker.bindPopup(`<b>${address}</b><br>${formatDate(records[0].timestamp)}<br>${records[0].lat.toFixed(6)}, ${records[0].lon.toFixed(6)}`);
+          } catch (error) {
+            latestAddress.textContent = "Adres alınamadı; koordinat gösteriliyor.";
+          }
           connection.textContent = "Canlı bağlantı";
         }
         updated.textContent = `Son yenileme: ${new Date().toLocaleTimeString("tr-TR")}`;
