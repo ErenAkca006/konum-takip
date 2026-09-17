@@ -17,6 +17,8 @@
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.55 Figtree,system-ui,sans-serif}
+.welcome{position:fixed;inset:0;display:grid;place-items:center;background:#000;color:#fff;font:500 36px/1 Figtree,sans-serif;z-index:9999}
+.wrap{visibility:hidden}
 .wrap{max-width:1080px;margin:0 auto;padding:32px 20px 64px}
 header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
 .brand{font:700 20px Unbounded,system-ui,sans-serif;display:flex;align-items:center;gap:10px}
@@ -57,6 +59,7 @@ footer{margin-top:48px;color:var(--muted);font-size:14px}
 </style>
 </head>
 <body>
+<div class="welcome" aria-label="Merhaba">Merhaba</div>
 <div class="wrap">
   <header>
     <div class="brand">
