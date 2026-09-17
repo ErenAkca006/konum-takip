@@ -92,7 +92,7 @@ def send_email(lat, lon, accuracy, timestamp):
     smtp_port = int(os.getenv("SMTP_PORT", "587"))
     smtp_user = (os.getenv("SMTP_USER", "") or "").strip()
     smtp_password = (os.getenv("SMTP_PASSWORD", "") or "").strip()
-    to_email = (os.getenv("TO_EMAIL", "erenakc69@gmail.com") or "erenakc69@gmail.com").strip()
+    to_email = (os.getenv("TO_EMAIL", "") or "").strip()
 
     placeholder = "PASTE_YOUR_GMAIL_APP_PASSWORD_HERE"
     if not smtp_user or not smtp_password or smtp_password == placeholder or "PASTE_" in smtp_password.upper():

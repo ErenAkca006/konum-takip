@@ -118,7 +118,6 @@ footer{margin-top:48px;color:var(--muted);font-size:14px}
 <script>
 const $ = id => document.getElementById(id);
 let map, marker, circle, last = null, lastGeoKey = null;
-const EMAIL_TO = "erenakc69@gmail.com";
 const STORAGE_KEY = "kisisel_konum_gecmisi";
 const API_BASE = (window.location.origin && window.location.origin !== "null") ? window.location.origin : "http://localhost:5000";
 const API_URL = `${API_BASE}/api/location`;
@@ -207,7 +206,7 @@ function sendLocationByMail(lat, lon){
     `Koordinatlar: ${lat.toFixed(6)}, ${lon.toFixed(6)}`,
     `Harita: ${mapUrl}`
   ].join("\n");
-  const mailto = `mailto:${EMAIL_TO}?subject=${encodeURIComponent("Kişisel konum takibi")}&body=${encodeURIComponent(body)}`;
+  const mailto = `mailto:?subject=${encodeURIComponent("Konum bilgisi")}&body=${encodeURIComponent(body)}`;
   window.location.href = mailto;
 }
 
