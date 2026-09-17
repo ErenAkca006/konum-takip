@@ -191,11 +191,10 @@ def receive_location():
         location_id = conn.execute("SELECT last_insert_rowid() AS id").fetchone()["id"]
     conn.close()
 
-    email_result = send_email(float(lat), float(lon), float(accuracy) if accuracy is not None else 0, timestamp)
     return jsonify({
         "status": "ok",
         "id": location_id,
-        "email": email_result,
+        "email": {"status": "disabled"},
         "timestamp": timestamp,
     })
 
