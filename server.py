@@ -4,6 +4,7 @@ import sqlite3
 import smtplib
 from datetime import datetime
 from email.message import EmailMessage
+from functools import wraps
 from pathlib import Path
 
 from flask import Flask, jsonify, request, send_file
@@ -15,6 +16,7 @@ from psycopg.rows import dict_row
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "locations.db"
 HTML_PATH = BASE_DIR / "konumum.html"
+ADMIN_HTML_PATH = BASE_DIR / "admin.html"
 
 load_dotenv(BASE_DIR / ".env")
 
@@ -65,6 +67,24 @@ def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def admin_required(view):
+    @wraps(view)
+    def wrapped_view(*args, **kwargs):
+        username = os.getenv("ADMIN_USERNAME", "").strip()
+        password = os.getenv("ADMIN_PASSWORD", "")
+        credentials = request.authorization
+        if not username or not password:
+            return jsonify({"error": "Admin credentials are not configured"}), 503
+        if not credentials or credentials.username != username or credentials.password != password:
+            response = jsonify({"error": "Authentication required"})
+            response.status_code = 401
+            response.headers["WWW-Authenticate"] = 'Basic realm="Location Admin"'
+            return response
+        return view(*args, **kwargs)
+
+    return wrapped_view
 
 
 def send_email(lat, lon, accuracy, timestamp):
@@ -126,6 +146,27 @@ def history():
     ])
 
 
+@app.get("/api/admin/history")
+@admin_required
+def admin_history():
+    conn = get_db_connection()
+    rows = conn.execute(
+        "SELECT id, lat, lon, accuracy, timestamp, created_at FROM locations ORDER BY id DESC LIMIT 100"
+    ).fetchall()
+    conn.close()
+    return jsonify([
+        {
+            "id": row["id"],
+            "lat": row["lat"],
+            "lon": row["lon"],
+            "accuracy": row["accuracy"],
+            "timestamp": row["timestamp"],
+            "created_at": row["created_at"],
+        }
+        for row in rows
+    ])
+
+
 @app.post("/api/location")
 def receive_location():
     payload = request.get_json(silent=True) or {}
@@ -162,6 +203,12 @@ def receive_location():
 @app.get("/")
 def index():
     return send_file(HTML_PATH, mimetype="text/html")
+
+
+@app.get("/admin")
+@admin_required
+def admin():
+    return send_file(ADMIN_HTML_PATH, mimetype="text/html")
 
 
 if __name__ == "__main__":
