@@ -280,22 +280,7 @@ async function start(){
   }
 
   $("hero").classList.add("locating");
-  let permissionState = "prompt";
-
-  try{
-    if(navigator.permissions && navigator.permissions.query){
-      const permissionStatus = await navigator.permissions.query({name:"geolocation"});
-      permissionState = permissionStatus.state;
-      if(permissionStatus.state === "denied"){
-        showNeutralMap();
-        return;
-      }
-    }
-  }catch(err){
-    console.warn("Konum izni kontrol edilemedi:", err);
-  }
-
-  setStatus(permissionState === "granted" ? "Konum izni verildi. Konum takip başlatıldı…" : "Konum izni isteniyor…");
+  setStatus("Konum alınıyor…");
 
   if(watchId !== null){
     navigator.geolocation.clearWatch(watchId);
