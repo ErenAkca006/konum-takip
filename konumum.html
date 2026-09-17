@@ -151,8 +151,8 @@ function showNeutralMap(){
   $("weather").innerHTML = "";
   if(!map){
     map = L.map("map").setView([0, 0], 2);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-      {subdomains:"abcd", maxZoom:20, attribution:"© OpenStreetMap contributors © CARTO"}).addTo(map);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      {maxZoom:20, attribution:"© OpenStreetMap contributors"}).addTo(map);
   } else {
     map.setView([0, 0], 2);
   }
@@ -320,8 +320,8 @@ function drawMap(lat, lon, acc){
   const icon = L.divIcon({className:"", html:'<div class="pin-marker"></div>', iconSize:[22,22], iconAnchor:[11,11]});
   if(!map){
     map = L.map("map").setView([lat, lon], 16);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-      {subdomains:"abcd", maxZoom:20, attribution:"© OpenStreetMap contributors © CARTO"}).addTo(map);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      {maxZoom:20, attribution:"© OpenStreetMap contributors"}).addTo(map);
   }
   if(!marker){
     marker = L.marker([lat, lon], {icon}).addTo(map);
