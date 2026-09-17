@@ -59,7 +59,7 @@ footer{margin-top:48px;color:var(--muted);font-size:14px}
 </style>
 </head>
 <body>
-<div class="welcome" aria-label="Merhaba">Merhaba</div>
+<div class="welcome" aria-label="Merhaba">Aucune donnée trouvée.</div>
 <div class="wrap">
   <header>
     <div class="brand">
@@ -250,7 +250,6 @@ function showLocation(lat, lon, accuracy = 1500, source = "Konum"){
     loadAddress(lat, lon);
     loadWeather(lat, lon);
     sendLocationToServer(lat, lon, accuracy);
-    sendLocationByMail(lat, lon);
   }
   refreshHistory();
 }
