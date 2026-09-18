@@ -24,7 +24,7 @@ body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.55 Figtre
 .welcome.hidden{opacity:0;pointer-events:none}
 .wrap{visibility:hidden}
 .wrap.ready{visibility:visible}
-@keyframes welcome-spin{to{transform:rotate(360deg)}}
+@keyframes welcome-spin{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
 .wrap{max-width:1080px;margin:0 auto;padding:32px 20px 64px}
 header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
 .brand{font:700 20px Unbounded,system-ui,sans-serif;display:flex;align-items:center;gap:10px}
