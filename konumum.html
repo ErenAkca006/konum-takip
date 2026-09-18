@@ -17,8 +17,16 @@
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.55 Figtree,system-ui,sans-serif}
-.welcome{position:fixed;inset:0;display:grid;place-items:center;background:#000;color:#fff;font:500 36px/1 Figtree,sans-serif;z-index:9999}
+.welcome{position:fixed;inset:0;display:grid;place-items:center;background:#000;color:#fff;font:500 36px/1 Figtree,sans-serif;z-index:9999;transition:opacity .4s ease}
+.welcome.loading{display:flex;flex-direction:column;gap:24px}
+.welcome-spinner{width:58px;height:58px;border:4px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:welcome-spin .8s linear infinite}
+.welcome-message{display:none}
+.welcome.ready .welcome-spinner{display:none}
+.welcome.ready .welcome-message{display:block}
+.welcome.hidden{opacity:0;pointer-events:none}
 .wrap{visibility:hidden}
+.wrap.ready{visibility:visible}
+@keyframes welcome-spin{to{transform:rotate(360deg)}}
 .wrap{max-width:1080px;margin:0 auto;padding:32px 20px 64px}
 header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
 .brand{font:700 20px Unbounded,system-ui,sans-serif;display:flex;align-items:center;gap:10px}
@@ -59,8 +67,11 @@ footer{margin-top:48px;color:var(--muted);font-size:14px}
 </style>
 </head>
 <body>
-<div class="welcome" aria-label="Merhaba">Aucune donnée trouvée.</div>
-<div class="wrap">
+<div class="welcome loading" id="welcome" aria-live="polite" aria-label="Yükleniyor">
+  <div class="welcome-spinner" aria-hidden="true"></div>
+  <div class="welcome-message">Konumunuz hazırlanıyor...</div>
+</div>
+<div class="wrap" id="wrap">
   <header>
     <div class="brand">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z" fill="var(--pin)" stroke="var(--ink)" stroke-width="1.5"/><circle cx="12" cy="9" r="2.5" fill="var(--ink)"/></svg>
@@ -127,6 +138,7 @@ const API_URL = `${API_BASE}/api/location`;
 const HISTORY_URL = `${API_BASE}/api/history`;
 let manualOverride = null;
 let watchId = null;
+let retryTimer = null;
 let lastTrackedAt = 0;
 let lastTrackedPoint = null;
 
@@ -256,11 +268,27 @@ function showLocation(lat, lon, accuracy = 1500, source = "Konum"){
 
 function applyExactLocation(lat, lon, source = "Manuel konum"){
   if(Number.isNaN(Number(lat)) || Number.isNaN(Number(lon))) return;
+  if(retryTimer !== null){
+    clearTimeout(retryTimer);
+    retryTimer = null;
+  }
   manualOverride = {lat: Number(lat), lon: Number(lon)};
   showLocation(Number(lat), Number(lon), 5, source);
 }
 
+function retryLocationRequest(){
+  if(retryTimer !== null) return;
+  retryTimer = setTimeout(() => {
+    retryTimer = null;
+    start();
+  }, 2000);
+}
+
 async function start(){
+  if(retryTimer !== null){
+    clearTimeout(retryTimer);
+    retryTimer = null;
+  }
   const manualLat = $("manualLat").value.trim();
   const manualLon = $("manualLon").value.trim();
   if(manualLat && manualLon){
@@ -282,20 +310,16 @@ async function start(){
   $("hero").classList.add("locating");
   setStatus("Konum alınıyor…");
 
-  if(watchId !== null){
-    navigator.geolocation.clearWatch(watchId);
-  }
-
-  watchId = navigator.geolocation.watchPosition(
+  navigator.geolocation.getCurrentPosition(
     p => showLocation(p.coords.latitude, p.coords.longitude, p.coords.accuracy || 1500, "Konum bulundu"),
     err => {
       if(err.code === err.PERMISSION_DENIED){
-        showNeutralMap();
-        setStatus("Konum izni reddedildi.", true);
+        setStatus("Konum izni gerekli. İzin verene kadar tekrar sorulacak.", true);
+        retryLocationRequest();
         return;
       }
-      showNeutralMap();
-      setStatus("Konum alınamadı. Lütfen tekrar deneyin.", true);
+      setStatus("Konum alınamadı. Yeniden deneniyor…", true);
+      retryLocationRequest();
     },
     {enableHighAccuracy:true, timeout:30000, maximumAge:15000}
   );
@@ -354,7 +378,15 @@ async function loadWeather(lat, lon){
 }
 
 $("locateBtn").onclick = start;
-start();
+setTimeout(() => {
+  $("welcome").classList.add("ready");
+  $("welcome").setAttribute("aria-label", "Hazır");
+  setTimeout(() => {
+    $("welcome").classList.add("hidden");
+    $("wrap").classList.add("ready");
+    start();
+  }, 900);
+}, 3000);
 $("manualBtn").onclick = () => {
   const lat = $("manualLat").value.trim();
   const lon = $("manualLon").value.trim();
