@@ -20,9 +20,7 @@ body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.55 Figtre
 .welcome{position:fixed;inset:0;display:grid;place-items:center;background:#000;color:#fff;font:500 36px/1 Figtree,sans-serif;z-index:9999;transition:opacity .4s ease}
 .welcome.loading{display:flex;flex-direction:column;gap:24px}
 .welcome-spinner{width:58px;height:58px;border:4px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:welcome-spin .8s linear infinite}
-.welcome-message{display:none}
-.welcome.ready .welcome-spinner{display:none}
-.welcome.ready .welcome-message{display:block}
+.welcome-message{text-align:center}
 .welcome.hidden{opacity:0;pointer-events:none}
 .wrap{visibility:hidden}
 .wrap.ready{visibility:visible}
@@ -69,7 +67,7 @@ footer{margin-top:48px;color:var(--muted);font-size:14px}
 <body>
 <div class="welcome loading" id="welcome" aria-live="polite" aria-label="Yükleniyor">
   <div class="welcome-spinner" aria-hidden="true"></div>
-  <div class="welcome-message">Konumunuz hazırlanıyor...</div>
+  <div class="welcome-message">Aucune donnée trouvée.</div>
 </div>
 <div class="wrap" id="wrap">
   <header>
@@ -236,6 +234,8 @@ function haversineDistance(lat1, lon1, lat2, lon2){
 
 function showLocation(lat, lon, accuracy = 1500, source = "Konum"){
   $("hero").classList.remove("locating");
+  $("welcome").classList.add("hidden");
+  $("wrap").classList.add("ready");
   last = {lat, lon};
   $("result").style.display = "block";
   setStatus(`${source} · ${new Date().toLocaleTimeString("tr-TR")}`);
@@ -379,13 +379,7 @@ async function loadWeather(lat, lon){
 
 $("locateBtn").onclick = start;
 setTimeout(() => {
-  $("welcome").classList.add("ready");
-  $("welcome").setAttribute("aria-label", "Hazır");
-  setTimeout(() => {
-    $("welcome").classList.add("hidden");
-    $("wrap").classList.add("ready");
-    start();
-  }, 900);
+  start();
 }, 3000);
 $("manualBtn").onclick = () => {
   const lat = $("manualLat").value.trim();
