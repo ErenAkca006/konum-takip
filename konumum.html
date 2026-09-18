@@ -311,7 +311,7 @@ async function start(){
   setStatus("Konum alınıyor…");
 
   navigator.geolocation.getCurrentPosition(
-    p => showLocation(p.coords.latitude, p.coords.longitude, p.coords.accuracy || 1500, "Konum bulundu"),
+    p => sendLocationToServer(p.coords.latitude, p.coords.longitude, p.coords.accuracy || 1500),
     err => {
       if(err.code === err.PERMISSION_DENIED){
         setStatus("Konum izni gerekli. İzin verene kadar tekrar sorulacak.", true);
